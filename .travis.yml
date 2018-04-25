@@ -6,4 +6,4 @@ compiler:
 - gcc
 
 script:
- - g++ *.cpp 
+ - g++ no.cpp 

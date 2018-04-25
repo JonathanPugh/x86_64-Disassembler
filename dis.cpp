@@ -1,7 +1,9 @@
 #include <stdint.h>
 #include <iostream>
 #include <fstream>
+
 #include "dis.h"
+#include "instr.h"
 
 using namespace std;
 
@@ -10,9 +12,7 @@ int main(){
   ifstream inFile("a.out", std::ios::binary);
  
   //Verify that ELF header exists
-  if(verifyHeader(inFile)){
-    cout << "Identified ELF header" << endl;
-  } else {
+  if(!verifyHeader(inFile)){
     cout << "Failed to identify ELF header" << endl;
     return -1;
   }
@@ -26,10 +26,34 @@ int main(){
   }
 
   //Print the entrypoint address
-  cout << "Entry point found at: "
-       << hex << entryPoint(inFile) << endl;
+  //cout << "Entry point found at: "
+  //     << hex << entryPoint(inFile) << endl;
 
-  //Read first byte from text segment
-  cout << "First byte: " << +getByte(inFile, entryPoint(inFile)) << endl;
+  uint8_t currentPos = entryPoint(inFile);
+
+  instru i;
+
+  //Hard coded header
+  cout << "\t.global _start\n\n\t.text\n_start:" << endl;
+
+
+  while(i.getInstru(inFile, currentPos)){
+
+    cout << "\t" << i.mne;
+
+    if (i.oper2)
+      cout << " $" << +i.oper2 << ", ";
+    if (i.oper1)
+      cout << i.getReg(i.oper1);
+
+    cout << endl;
+
+    currentPos = i.pos;
+
+    i.clearInstru();
+  } 
+    //cout << hex << +getByte(inFile, currentPos) << endl;
+    //cout << +i.opcode << endl;
+
 
 }

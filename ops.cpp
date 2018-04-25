@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 
+#include "instr.h"
 #include "dis.h"
 
 using namespace std;
@@ -33,6 +34,52 @@ uint8_t getByte(istream& file, int pos = DEFAULTPOS){
 
   return val;
 }
+/*****************************************************
+ *  Retrieves 8 bytes from the specified file
+ *
+ *  @param file - The file to read from
+ *
+ *  @return 8 bytes read from file as int64_t
+ *
+ * **************************************************/
+int32_t get4Bytes (istream &file, int pos){
+
+  //8 bytes required for memory address
+  int32_t total = 0,
+          temp = 0;
+
+  uint8_t upperVal, lowerVal;
+
+
+  for (int i = 0; i < 4; i++){
+    temp = getByte(file, pos + i);
+
+    //Store lower 4 bits
+    //lowerVal = temp & 0x0f;
+
+    //Store upper 4 bits
+    //upperVal = temp & 0xf0;
+
+    //Shift upperVal right by 4 bits
+    //upperVal = upperVal >> 4;
+
+    //Shift lowerVal left by 4 bits
+    //upperVal = upperVal << 4;
+
+    //Add address bytes in the correct order
+    //temp = upperVal + lowerVal;
+
+    //Store address bytes at the correct power
+    temp = temp << ( i * 8 );
+
+    //Add corrected byte to total
+    total += temp;
+  }
+
+  return total;
+
+}
+
 
 /*****************************************************
  *  Verifies that the ELF header exists in the file.
@@ -82,17 +129,16 @@ bool verifyArch(istream& file){
   uint8_t arch = getByte(file, 4);
 
   if (arch == 1){
-    cout << "Identified 32-bit" << endl;
+    //cout << "Identified 32-bit" << endl;
     return true;
   }
   if (arch == 2){
-    cout << "Identified 64-bit" << endl;
+    //cout << "Identified 64-bit" << endl;
     return true;
   }
 
   return false;
 }
-
 /*****************************************************
  *  Finds the entrypoint for the text segment in 
  *  the ELF header
@@ -139,4 +185,5 @@ long int entryPoint (istream &file){
   return addr - 0x400000;
 
 }
+
 

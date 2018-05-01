@@ -20,6 +20,8 @@ class instru{
   //REX prefix variables
   bool rex, rexW, rexR, rexX, rexB;
 
+  //Variable length opcode prefixes
+  bool opPre1, opPre2;
 
   instru(){
 
@@ -27,14 +29,22 @@ class instru{
     oper1 = oper2 = 0;
     twoOps = false;
 
-    rex, rexW, rexR, rexX, rexB = 0;
+    rex = rexW = rexR = rexX = rexB = 0;
+
+    opPre1 = opPre2 = 0;
   }
 
   bool getInstru(istream &file, int readPos){
     pos = readPos;
     opcode = getByte(file, pos);
 
-    parsePrefix(file, readPos);
+    if (parsePrefix(file, readPos)){
+      //Increment pos if a prefix was read
+      pos++;
+      //Increment pos is a second prefix was read
+      if(opPre2)
+        pos++;
+    }
 
     //End function early for debugging
     return 1;
@@ -109,7 +119,15 @@ class instru{
     //Check to see if the byte read is a prefix
     switch(prefix){
       //Group 1
-      case 0xF0:
+      case 0xF0: {
+		   opPre1 = prefix;
+		   int prefix2 = getByte(file, pos + 1);
+
+                   if (prefix2 == 0x38 || prefix2 == 0x3A)
+                     opPre2 = prefix2;
+ 
+                   return true;
+                 }
       case 0xF2:
       case 0xF3:
       //Group 2

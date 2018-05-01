@@ -33,6 +33,8 @@ int main(){
 
   instru i;
 
+  i.getInstru(inFile, currentPos);
+/*
   //Hard coded header
   cout << "\t.global _start\n\n\t.text\n_start:" << endl;
 
@@ -55,5 +57,5 @@ int main(){
     //cout << hex << +getByte(inFile, currentPos) << endl;
     //cout << +i.opcode << endl;
 
-
+*/
 }

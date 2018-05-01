@@ -15,29 +15,20 @@ class instru{
   int64_t oper1, oper2;
 
   string mne, reg;
-  bool twoOps;
-
-  //REX prefix variables
-  bool rex, rexW, rexR, rexX, rexB;
+  bool rex, twoOps;
 
 
   instru(){
 
     opcode = 0;
     oper1 = oper2 = 0;
-    twoOps = false;
+    rex = twoOps = false;
 
-    rex, rexW, rexR, rexX, rexB = 0;
   }
 
   bool getInstru(istream &file, int readPos){
     pos = readPos;
     opcode = getByte(file, pos);
-
-    parsePrefix(file, readPos);
-
-    //End function early for debugging
-    return 1;
 
     //Identify REX byte
     if (opcode == 0x48){
@@ -82,53 +73,6 @@ class instru{
 
     return true;
   }
-
-  bool parsePrefix(istream &file, int pos){
-    uint8_t prefix = getByte(file, pos);
-
-    //Check for REX prefix
-    if ( (prefix & 0xF0) == 0x40){
-      rex = 1;
-
-      //REX.W
-      if ( (prefix & 0x8) == 0x8)
-        rexW = 1;
-      //REX.R
-      if ( (prefix & 0x4) == 0x4)
-        rexR = 1;
-      //REX.X
-      if ( (prefix & 0x2) == 0x2)
-        rexX = 1;
-      //REX.B
-      if ( (prefix & 0x1) == 0x1)
-        rexB = 1;
-
-      return true;
-    }
-
-    //Check to see if the byte read is a prefix
-    switch(prefix){
-      //Group 1
-      case 0xF0:
-      case 0xF2:
-      case 0xF3:
-      //Group 2
-      case 0x2E:
-      case 0x36:
-      case 0x3E:
-      case 0x26:
-      case 0x64:
-      case 0x65:
-      //Group 3
-      case 0x66:
-      //Group 4
-      case 0x67: cout << "Prefix not yet implemented" << endl;
-                 return true;
-      //No prefix found
-      default: return false;
-    }
-  }
-
 
 
   string getMne(){

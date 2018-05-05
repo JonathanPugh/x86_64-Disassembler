@@ -75,7 +75,7 @@ class instru{
 
     parseOpcode(opcode, file);
 
-    if (!modRegRM){
+    if (!modRegRM && !opPre1){
       if (operand1r)
         //Get 1 byte then increment pos by 1
         operand1 = getByte(file,pos++);
@@ -125,6 +125,8 @@ class instru{
 
     cout << endl;
 
+    pos = file.tellg();
+
     //End function
     return true;
 
@@ -157,15 +159,12 @@ class instru{
     //Check to see if the byte read is a prefix
     switch(prefix){
       //Group 1
-      case 0xF0: {
-		   opPre1 = prefix;
-		   int prefix2 = getByte(file, pos + 1);
+      case 0xF0:   opPre1 = prefix;
+		   opPre2 = getByte(file, pos + 1);
 
-                   if (prefix2 == 0x38 || prefix2 == 0x3A)
-                     opPre2 = prefix2;
- 
-                   return true;
-                 }
+                   if (opPre2 != 0x38 && opPre2 != 0x3A)
+                     opPre2 = 0;
+                  return true;
       case 0xF2:
       case 0xF3:
       //Group 2
@@ -188,27 +187,35 @@ class instru{
 
 
   bool parseOpcode(uint8_t opcode, istream &file){
+    if (opPre1 == 0x0F){
+      switch(opcode)
+        case 0x05: mne = "syscall";
+                   return true;
+    }
+
     switch(opcode){
       //mov instruction	0xc7
       case 0xc7: mne = "mov";
 		 //Operands are 4 bytes
 		 operandSize = 4;
 		 //Operand1 is a register
-		 operand1r = 1;
+		 //operand1r = 1;
 		 //Operands are printed in the reverse order
 		 swapOperands = 1;
 		 
+		 parseRegModRM(getByte(file, pos++));
+		 operand2r = 0;
+        	 operand2 = get4Bytes(file, pos);
+
 		 return true;
       //mov instruction 0x89
       case 0x89: mne = "mov";
 		 parseRegModRM(getByte(file, pos++));
 		 return true;
-      //SYSCALL
-      case 0x0f: mne = "syscall";
-		 return true;
 
       //Return false for unknown operation
-      default:   return false;
+      default:   mne = "UNK_OP";
+		 return false;
     }
   }
 

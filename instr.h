@@ -12,7 +12,16 @@ class instru{
   public:
 
   uint8_t opcode, pos;
-  int64_t oper1, oper2;
+  int64_t operand1, operand2;
+
+  //Stores if operand1/2 are registers
+  bool operand1r, operand2r;
+
+  //Stores operand size (used if not register)
+  int operandSize;
+
+  //True is operands are read in reverse order
+  bool swapOperands;
 
   string mne, reg;
   bool twoOps;
@@ -26,8 +35,14 @@ class instru{
   instru(){
 
     opcode = 0;
-    oper1 = oper2 = 0;
+    operand1 = operand2 = 0;
     twoOps = false;
+
+    operand1r = operand2r = 0;
+
+    swapOperands = 0;
+
+    operandSize = 0;
 
     rex = rexW = rexR = rexX = rexB = 0;
 
@@ -36,7 +51,6 @@ class instru{
 
   bool getInstru(istream &file, int readPos){
     pos = readPos;
-    opcode = getByte(file, pos);
 
     if (parsePrefix(file, readPos)){
       //Increment pos if a prefix was read
@@ -46,51 +60,67 @@ class instru{
         pos++;
     }
 
-    //End function early for debugging
-    return 1;
-
-    //Identify REX byte
-    if (opcode == 0x48){
-      rex = 1;
-      //cout << "Found the REX" << endl;
-      opcode = getByte(file, ++pos);
+    //Next byte should be the opcode
+    if (!(opcode = getByte(file, pos++))){
+      cout << "READ INVALID OPCODE" << endl;
+      return false;
     }
 
-    mne = getMne();
+    cout << "OPCODE: " << hex << +opcode << endl;
 
-    switch(opcode){
- 
-      //mov instruction	
-      case 0xc7: twoOps = true;
-                 break;
+    parseOpcode(opcode);
 
-      //SYSCALL - Skip next byte, end method
-      case 0x0f: pos += 2;
-		 return true;
-		 break;
+    if (operand1r)
+      //Get 1 byte then increment pos by 1
+      operand1 = getByte(file,pos++);
+    else{
+      //Get 4 bytes then increment pos by 4
+      operand1 = get4Bytes(file, pos);
+      pos += 4;
+    }
+    cout << "OPER1: " << operand1 << endl;
 
-      case 0x00: //cout << "Found 0x00 opcode" << endl;
-		 return false;
-		 break;
-
-      //Return false for unknown operation
-      default:   return false;
-
+    if (operand2r)
+      //Get 1 byte then increment pos by 1
+      operand2 = getByte(file,pos++);
+    else{
+      //Get 4 bytes then increment pos by 4
+      operand2 = get4Bytes(file, pos);
+      pos += 4;
     }
 
-    oper1 = getByte(file, ++pos);
+    cout << "OPER2: " << hex << +operand2 << endl;
 
+    if (swapOperands){
+      int64_t tempOperand = operand1;
+      operand1 = operand2;
+      operand2 = tempOperand;
 
+      bool tempr = operand1r;
+      operand1r = operand2r;
+      operand2r = tempr;
+    }
 
-    if(twoOps)
-      if(rex)
-        oper2 = get4Bytes(file, ++pos);
-      else
-        oper2 = getByte(file, ++pos);
+    //Print instruction to cout
+    cout << "\t" << mne << "\t";
+    if (operand1r)
+      cout << getReg(operand1);
+    else
+      cout << "$0x" << hex << +operand1;
 
-    pos = file.tellg();
+    cout << ",";
 
+    if (operand2r)
+      cout << getReg(operand2);
+    else
+      cout << "$0x" << hex << +operand2;
+
+    cout << endl;
+
+    //End function
     return true;
+
+  
   }
 
   bool parsePrefix(istream &file, int pos){
@@ -149,16 +179,27 @@ class instru{
 
 
 
-  string getMne(){
+  bool parseOpcode(uint8_t opcode){
     switch(opcode){
-      //mov instruction	
-      case 0xc7: return "mov";
-
+      //mov instruction	0xc7
+      case 0xc7: mne = "mov";
+		 //Operands are 4 bytes
+		 operandSize = 4;
+		 //Operand1 is a register
+		 operand1r = 1;
+		 //Operands are printed in the reverse order
+		 swapOperands = 1;
+		 
+		 return true;
+      //mov instruction 0x89
+      case 0x89: mne = "mov";
+		 return true;
       //SYSCALL
-      case 0x0f: return "syscall";
+      case 0x0f: mne = "syscall";
+		 return true;
 
-      //Return UNK for unknown operation
-      default:   return "UNK";
+      //Return false for unknown operation
+      default:   return false;
     }
   }
 
@@ -176,8 +217,8 @@ class instru{
 
 
   void clearInstru(){
-    oper1 = 0; 
-    oper2 = 0;
+    operand1 = 0; 
+    operand2 = 0;
     rex = twoOps = false;
   }
 };

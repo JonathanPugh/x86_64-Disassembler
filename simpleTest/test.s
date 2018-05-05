@@ -3,7 +3,6 @@
 	.text
 _start:
 	mov $20, %rax
-	mov $60, %rax
-	syscall
+	mov %rax, %rbx
 	mov $60, %rax
 	syscall

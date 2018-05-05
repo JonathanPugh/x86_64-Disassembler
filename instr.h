@@ -32,6 +32,8 @@ class instru{
   //Variable length opcode prefixes
   bool opPre1, opPre2;
 
+  bool modRegRM;
+
   instru(){
 
     opcode = 0;
@@ -47,12 +49,15 @@ class instru{
     rex = rexW = rexR = rexX = rexB = 0;
 
     opPre1 = opPre2 = 0;
+
+    modRegRM = 0;
   }
 
   bool getInstru(istream &file, int readPos){
+    //Getting instruction 2
     pos = readPos;
 
-    if (parsePrefix(file, readPos)){
+    if (parsePrefix(file, pos)){
       //Increment pos if a prefix was read
       pos++;
       //Increment pos is a second prefix was read
@@ -68,28 +73,30 @@ class instru{
 
     cout << "OPCODE: " << hex << +opcode << endl;
 
-    parseOpcode(opcode);
+    parseOpcode(opcode, file);
 
-    if (operand1r)
-      //Get 1 byte then increment pos by 1
-      operand1 = getByte(file,pos++);
-    else{
-      //Get 4 bytes then increment pos by 4
-      operand1 = get4Bytes(file, pos);
-      pos += 4;
+    if (!modRegRM){
+      if (operand1r)
+        //Get 1 byte then increment pos by 1
+        operand1 = getByte(file,pos++);
+      else{
+        //Get 4 bytes then increment pos by 4
+        operand1 = get4Bytes(file, pos);
+        pos += 4;
+      }
+      cout << "OPER1: " << operand1 << endl;
+
+      if (operand2r)
+        //Get 1 byte then increment pos by 1
+        operand2 = getByte(file,pos++);
+      else{
+        //Get 4 bytes then increment pos by 4
+        operand2 = get4Bytes(file, pos);
+        pos += 4;
+      }
+
+      cout << "OPER2: " << hex << +operand2 << endl;
     }
-    cout << "OPER1: " << operand1 << endl;
-
-    if (operand2r)
-      //Get 1 byte then increment pos by 1
-      operand2 = getByte(file,pos++);
-    else{
-      //Get 4 bytes then increment pos by 4
-      operand2 = get4Bytes(file, pos);
-      pos += 4;
-    }
-
-    cout << "OPER2: " << hex << +operand2 << endl;
 
     if (swapOperands){
       int64_t tempOperand = operand1;
@@ -103,6 +110,7 @@ class instru{
 
     //Print instruction to cout
     cout << "\t" << mne << "\t";
+
     if (operand1r)
       cout << getReg(operand1);
     else
@@ -179,7 +187,7 @@ class instru{
 
 
 
-  bool parseOpcode(uint8_t opcode){
+  bool parseOpcode(uint8_t opcode, istream &file){
     switch(opcode){
       //mov instruction	0xc7
       case 0xc7: mne = "mov";
@@ -193,6 +201,7 @@ class instru{
 		 return true;
       //mov instruction 0x89
       case 0x89: mne = "mov";
+		 parseRegModRM(getByte(file, pos++));
 		 return true;
       //SYSCALL
       case 0x0f: mne = "syscall";
@@ -203,10 +212,46 @@ class instru{
     }
   }
 
+  void parseRegModRM(uint8_t byte){
+    modRegRM = 1;
 
-  string getReg(int64_t reg){
+    cout << "MOD REG R/M: " << hex << +byte << endl;
+
+    bool d = opcode & 0x01;
+
+    cout << "d: " << d << endl;
+
+    uint8_t mod = byte >> 6;
+    uint8_t reg = (byte & 0x38) >> 3;
+    uint8_t rm = byte & 0x07;
+
+    if (mod == 0b11){
+     operand1r = operand2r = 1; 
+     operand1 = reg;
+     operand2 = rm;
+
+     cout << hex << operand1 << endl;
+
+
+    }
+
+  }
+
+
+
+  string getReg(uint8_t reg){
 
     switch(reg){
+
+      case 0x0: return "%rax";
+      case 0x1: return "%rcx";
+      case 0x2: return "%rdx";
+      case 0x3: return "%rbx";
+      case 0x4: return "%rsp";
+      case 0x5: return "%rbp";
+      case 0x6: return "%rsi";
+      case 0x7: return "%rdi";
+
       //%rax
       case 0xc0: return "%rax";
 

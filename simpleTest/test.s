@@ -2,7 +2,10 @@
 
 	.text
 _start:
-	mov $20, %rax
+	add $60, %rax
+	add %rbx, %rax
+	mov $20, %rdx
+	mov $43, %ecx
 	mov %rax, %rbx
-	mov $60, %rax
 	syscall
+	add $60, %eax

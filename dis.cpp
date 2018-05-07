@@ -29,26 +29,17 @@ int main(){
   //cout << "Entry point found at: "
   //     << hex << entryPoint(inFile) << endl;
 
-  uint8_t currentPos = entryPoint(inFile);
+  uint8_t currentPos = entryPoint(inFile) ;
 
   instru i;
 
-  i.getInstru(inFile, currentPos);
-/*
+  //i.getInstru(inFile, currentPos);
+
   //Hard coded header
-  cout << "\t.global _start\n\n\t.text\n_start:" << endl;
+  //cout << "\t.global _start\n\n\t.text\n_start:" << endl;
 
 
   while(i.getInstru(inFile, currentPos)){
-
-    cout << "\t" << i.mne;
-
-    if (i.oper2)
-      cout << " $" << +i.oper2 << ", ";
-    if (i.oper1)
-      cout << i.getReg(i.oper1);
-
-    cout << endl;
 
     currentPos = i.pos;
 
@@ -57,5 +48,5 @@ int main(){
     //cout << hex << +getByte(inFile, currentPos) << endl;
     //cout << +i.opcode << endl;
 
-*/
+
 }

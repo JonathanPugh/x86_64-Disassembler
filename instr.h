@@ -24,13 +24,13 @@ class instru{
   bool swapOperands;
 
   string mne, reg;
-  bool twoOps;
+  bool noOps, twoOps;
 
   //REX prefix variables
   bool rex, rexW, rexR, rexX, rexB;
 
   //Variable length opcode prefixes
-  bool opPre1, opPre2;
+  uint8_t opPre1, opPre2;
 
   bool modRegRM;
 
@@ -42,15 +42,19 @@ class instru{
 
     operand1r = operand2r = 0;
 
+    operandSize = 0;
+
     swapOperands = 0;
 
-    operandSize = 0;
+    mne = reg = "";
 
     rex = rexW = rexR = rexX = rexB = 0;
 
     opPre1 = opPre2 = 0;
 
     modRegRM = 0;
+
+    noOps = 0;
   }
 
   bool getInstru(istream &file, int readPos){
@@ -65,16 +69,19 @@ class instru{
         pos++;
     }
 
-    //Next byte should be the opcode
-    if (!(opcode = getByte(file, pos++))){
-      cout << "READ INVALID OPCODE" << endl;
+    //Next byte should be the opcode, return if 0 is read
+    if (!(opcode = getByte(file, pos++)))
       return false;
-    }
-
-    cout << "OPCODE: " << hex << +opcode << endl;
 
     parseOpcode(opcode, file);
 
+    //Instruction has no operands
+    if(noOps){
+      cout << "\t" << mne << endl;
+      pos = file.tellg();
+      return true;
+    }
+/*
     if (!modRegRM && !opPre1){
       if (operand1r)
         //Get 1 byte then increment pos by 1
@@ -84,7 +91,6 @@ class instru{
         operand1 = get4Bytes(file, pos);
         pos += 4;
       }
-      cout << "OPER1: " << operand1 << endl;
 
       if (operand2r)
         //Get 1 byte then increment pos by 1
@@ -97,7 +103,7 @@ class instru{
 
       cout << "OPER2: " << hex << +operand2 << endl;
     }
-
+*/
     if (swapOperands){
       int64_t tempOperand = operand1;
       operand1 = operand2;
@@ -159,7 +165,7 @@ class instru{
     //Check to see if the byte read is a prefix
     switch(prefix){
       //Group 1
-      case 0xF0:   opPre1 = prefix;
+      case 0x0F:   opPre1 = prefix;
 		   opPre2 = getByte(file, pos + 1);
 
                    if (opPre2 != 0x38 && opPre2 != 0x3A)
@@ -187,10 +193,26 @@ class instru{
 
 
   bool parseOpcode(uint8_t opcode, istream &file){
+    //Parse prefix byte
     if (opPre1 == 0x0F){
       switch(opcode)
         case 0x05: mne = "syscall";
+		   noOps = 1;
                    return true;
+    }
+
+    //Check for B* mov instruction
+    if ((opcode & 0xF0) == 0xB0){
+      mne = "mov";
+      //if (opcode >= 0xB8)
+        operand1 = opcode & 0x07;
+        operand1r = 1;
+	operand2 = get4Bytes(file,pos);
+
+	swapOperands = 1;
+
+      return 1;
+
     }
 
     switch(opcode){
@@ -201,12 +223,24 @@ class instru{
 		 //Operand1 is a register
 		 //operand1r = 1;
 		 //Operands are printed in the reverse order
-		 swapOperands = 1;
+		 //swapOperands = 1;
 		 
 		 parseRegModRM(getByte(file, pos++));
-		 operand2r = 0;
-        	 operand2 = get4Bytes(file, pos);
+		 operand1r = 0;
+        	 operand1 = get4Bytes(file, pos);
 
+		 return true;
+      //add imm,reg
+      case 0x83: mne = "add"; 
+		 swapOperands = 1;
+		 parseRegModRM(getByte(file, pos++));
+		 operand2r = 0;
+        	 operand2 = getByte(file, pos);
+
+		 return true;
+      //add reg/reg
+      case 0x01: mne = "add";
+		 parseRegModRM(getByte(file, pos++));
 		 return true;
       //mov instruction 0x89
       case 0x89: mne = "mov";
@@ -222,11 +256,7 @@ class instru{
   void parseRegModRM(uint8_t byte){
     modRegRM = 1;
 
-    cout << "MOD REG R/M: " << hex << +byte << endl;
-
     bool d = opcode & 0x01;
-
-    cout << "d: " << d << endl;
 
     uint8_t mod = byte >> 6;
     uint8_t reg = (byte & 0x38) >> 3;
@@ -236,31 +266,41 @@ class instru{
      operand1r = operand2r = 1; 
      operand1 = reg;
      operand2 = rm;
-
-     cout << hex << operand1 << endl;
-
-
     }
-
   }
 
 
 
   string getReg(uint8_t reg){
+    //Use 64-bit registers
+    if(rexW){
+      switch(reg){
 
+        case 0x0: return "%rax";
+        case 0x1: return "%rcx";
+        case 0x2: return "%rdx";
+        case 0x3: return "%rbx";
+        case 0x4: return "%rsp";
+        case 0x5: return "%rbp";
+        case 0x6: return "%rsi";
+        case 0x7: return "%rdi";
+
+        //Return UNK for unknown register
+        default:   return "UNK";
+      }
+    }
+
+    //Default to 32-bit registers
     switch(reg){
 
-      case 0x0: return "%rax";
-      case 0x1: return "%rcx";
-      case 0x2: return "%rdx";
-      case 0x3: return "%rbx";
-      case 0x4: return "%rsp";
-      case 0x5: return "%rbp";
-      case 0x6: return "%rsi";
-      case 0x7: return "%rdi";
-
-      //%rax
-      case 0xc0: return "%rax";
+      case 0x0: return "%eax";
+      case 0x1: return "%ecx";
+      case 0x2: return "%edx";
+      case 0x3: return "%ebx";
+      case 0x4: return "%esp";
+      case 0x5: return "%ebp";
+      case 0x6: return "%esi";
+      case 0x7: return "%edi";
 
       //Return UNK for unknown register
       default:   return "UNK";
@@ -269,9 +309,25 @@ class instru{
 
 
   void clearInstru(){
-    operand1 = 0; 
-    operand2 = 0;
-    rex = twoOps = false;
+    opcode = 0;
+    operand1 = operand2 = 0;
+    twoOps = false;
+
+    operand1r = operand2r = 0;
+
+    operandSize = 0;
+
+    swapOperands = 0;
+
+    mne = reg = "";
+
+    rex = rexW = rexR = rexX = rexB = 0;
+
+    opPre1 = opPre2 = 0;
+
+    modRegRM = 0;
+
+    noOps = 0;
   }
 };
 

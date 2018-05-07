@@ -4,9 +4,10 @@ This is a barebones x86_64 disassembler that supports a limited number of instru
 
 ## Compiling
 Compile with g++:
-...
+
+```
 g++ *.cpp
-...
+```
 
 ## Supported instructions
 The following opcodes are supported:

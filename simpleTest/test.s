@@ -2,9 +2,12 @@
 
 	.text
 _start:
+	imul %rbx
+	mul %rbx
 	add $60, %rax
 	add %rbx, %rax
-	mov $20, %rdx
+	add $60, %eax
+	add %ebx, %eax
 	mov $43, %ecx
 	mov %rax, %rbx
 	syscall

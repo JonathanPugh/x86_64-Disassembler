@@ -24,7 +24,7 @@ class instru{
   bool swapOperands;
 
   string mne, reg;
-  bool noOps, twoOps;
+  bool noOps, oneOp;
 
   //REX prefix variables
   bool rex, rexW, rexR, rexX, rexB;
@@ -32,13 +32,15 @@ class instru{
   //Variable length opcode prefixes
   uint8_t opPre1, opPre2;
 
+  uint8_t RM_reg, RM_mod, RM_rm;
+
   bool modRegRM;
 
   instru(){
 
     opcode = 0;
     operand1 = operand2 = 0;
-    twoOps = false;
+    oneOp = false;
 
     operand1r = operand2r = 0;
 
@@ -78,6 +80,21 @@ class instru{
     //Instruction has no operands
     if(noOps){
       cout << "\t" << mne << endl;
+      pos = file.tellg();
+      return true;
+    }
+
+    //Instruction has only 1 operand
+    if (oneOp){
+      cout << "\t" << mne << "\t";
+
+      if (operand2r)
+        cout << getReg(operand2);
+      else
+        cout << "$0x" << hex << +operand2;
+
+      cout << endl;
+
       pos = file.tellg();
       return true;
     }
@@ -246,7 +263,15 @@ class instru{
       case 0x89: mne = "mov";
 		 parseRegModRM(getByte(file, pos++));
 		 return true;
+      //mul and imul
+      case 0xF7: parseRegModRM(getByte(file, pos++));
+                 oneOp = true;
+		 if (RM_reg == 0b101)
+                   mne = "imul";
+                 else
+                   mne = "mul";
 
+                 return true;
       //Return false for unknown operation
       default:   mne = "UNK_OP";
 		 return false;
@@ -258,14 +283,14 @@ class instru{
 
     bool d = opcode & 0x01;
 
-    uint8_t mod = byte >> 6;
-    uint8_t reg = (byte & 0x38) >> 3;
-    uint8_t rm = byte & 0x07;
+    RM_mod = byte >> 6;
+    RM_reg = (byte & 0x38) >> 3;
+    RM_rm = byte & 0x07;
 
-    if (mod == 0b11){
+    if (RM_mod == 0b11){
      operand1r = operand2r = 1; 
-     operand1 = reg;
-     operand2 = rm;
+     operand1 = RM_reg;
+     operand2 = RM_rm;
     }
   }
 
@@ -311,9 +336,10 @@ class instru{
   void clearInstru(){
     opcode = 0;
     operand1 = operand2 = 0;
-    twoOps = false;
 
     operand1r = operand2r = 0;
+
+    oneOp = 0;
 
     operandSize = 0;
 
@@ -326,6 +352,8 @@ class instru{
     opPre1 = opPre2 = 0;
 
     modRegRM = 0;
+
+    RM_mod = RM_reg = RM_rm = 0;
 
     noOps = 0;
   }

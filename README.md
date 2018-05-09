@@ -18,7 +18,7 @@ gcc -nostdlib simpleTest/test.s
 gcc -nostdlib helloWorld/helloWorld.s
 ```
 
-##Usage
+## Usage
 Pass the path of the executable to disassemble as a command line argument:
 
 ```

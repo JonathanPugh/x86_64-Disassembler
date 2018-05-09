@@ -41,7 +41,6 @@ int main(int argc, char** argv){
   }
 
   //Return if architecture cannot be identified
-  //verifyArch() will print the identified architecture
   if(!verifyArch(inFile))
   {
     cout << "Failed to identify architecture" << endl;
@@ -52,14 +51,12 @@ int main(int argc, char** argv){
   //cout << "Entry point found at: "
   //     << hex << entryPoint(inFile) << endl;
 
-  uint8_t currentPos = entryPoint(inFile) ;
+  uint64_t currentPos = entryPoint(inFile) ;
 
   instru i;
 
-  //i.getInstru(inFile, currentPos);
-
   //Hard coded header
-  //cout << "\t.global _start\n\n\t.text\n_start:" << endl;
+  cout << "\t.global _start\n\n\t.text\n_start:" << endl;
 
 
   while(i.getInstru(inFile, currentPos)){
@@ -68,8 +65,4 @@ int main(int argc, char** argv){
 
     i.clearInstru();
   } 
-    //cout << hex << +getByte(inFile, currentPos) << endl;
-    //cout << +i.opcode << endl;
-
-
 }

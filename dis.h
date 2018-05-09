@@ -24,7 +24,8 @@ class instru{
 
   public:
 
-  uint8_t opcode, pos;
+  uint8_t opcode;
+  uint64_t pos;
   int64_t operand1, operand2;
 
   //Stores if operand1/2 are registers

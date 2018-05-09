@@ -45,7 +45,11 @@ using namespace std;
     if (!(opcode = getByte(file, pos++)))
       return false;
 
-    parseOpcode(opcode, file);
+    if(!parseOpcode(opcode, file)){
+      cout << "Read invalid opcode: " << hex << +opcode
+           << " at position " << +pos << endl;
+      return false;
+    }
 
     //Instruction has no operands
     if(noOps){
@@ -181,6 +185,28 @@ using namespace std;
     }
 
     switch(opcode){
+      //add reg/reg
+      case 0x01: mne = "add";
+		 parseRegModRM(getByte(file, pos++));
+		 return true;
+      //push
+      case 0x68: mne = "push";
+                 oneOp = true;
+		 operand2 = get4Bytes(file, pos);
+		 pos += 4;
+                 return true;
+      //add imm,reg
+      case 0x83: mne = "add"; 
+		 swapOperands = 1;
+		 parseRegModRM(getByte(file, pos++));
+		 operand2r = 0;
+        	 operand2 = getByte(file, pos);
+
+		 return true;
+      //mov instruction 0x89
+      case 0x89: mne = "mov";
+		 parseRegModRM(getByte(file, pos++));
+		 return true;
       //mov instruction	0xc7
       case 0xc7: mne = "mov";
 		 //Operands are 4 bytes
@@ -194,22 +220,6 @@ using namespace std;
 		 operand1r = 0;
         	 operand1 = get4Bytes(file, pos);
 
-		 return true;
-      //add imm,reg
-      case 0x83: mne = "add"; 
-		 swapOperands = 1;
-		 parseRegModRM(getByte(file, pos++));
-		 operand2r = 0;
-        	 operand2 = getByte(file, pos);
-
-		 return true;
-      //add reg/reg
-      case 0x01: mne = "add";
-		 parseRegModRM(getByte(file, pos++));
-		 return true;
-      //mov instruction 0x89
-      case 0x89: mne = "mov";
-		 parseRegModRM(getByte(file, pos++));
 		 return true;
       //mul and imul
       case 0xF7: parseRegModRM(getByte(file, pos++));

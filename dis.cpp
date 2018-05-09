@@ -7,9 +7,32 @@
 
 using namespace std;
 
-int main(){
+int main(int argc, char** argv){
 
-  ifstream inFile("a.out", std::ios::binary);
+  string fileName = "a.out";
+
+  if (argc > 2){
+    cout << "Too many parameters specified" << endl;
+    cout << "Use --help for help" << endl;
+    return -3;
+  }
+
+  //If a command line parameter was specified
+  if (argv[1]){
+    if (argv[1] == string("--help")){
+      cout << "Help text not added yet =(" << endl;
+      return 0;
+    } else
+      fileName = string(argv[1]);
+  }
+
+  ifstream inFile(fileName.c_str(), std::ios::binary);
+
+  //Input file not found
+  if (!inFile){
+    cout << "File \"" << fileName << "\" not found" << endl;
+    return -4;
+  }
  
   //Verify that ELF header exists
   if(!verifyHeader(inFile)){

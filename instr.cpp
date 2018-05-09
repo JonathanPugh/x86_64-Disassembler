@@ -1,5 +1,4 @@
-#ifndef INSTRU_H
-#define INSTRU_H
+#include <iostream>
 #include <stdint.h>
 #include <string>
 #include <fstream>
@@ -7,36 +6,7 @@
 
 using namespace std;
 
-class instru{
-
-  public:
-
-  uint8_t opcode, pos;
-  int64_t operand1, operand2;
-
-  //Stores if operand1/2 are registers
-  bool operand1r, operand2r;
-
-  //Stores operand size (used if not register)
-  int operandSize;
-
-  //True is operands are read in reverse order
-  bool swapOperands;
-
-  string mne, reg;
-  bool noOps, oneOp;
-
-  //REX prefix variables
-  bool rex, rexW, rexR, rexX, rexB;
-
-  //Variable length opcode prefixes
-  uint8_t opPre1, opPre2;
-
-  uint8_t RM_reg, RM_mod, RM_rm;
-
-  bool modRegRM;
-
-  instru(){
+  instru::instru(){
 
     opcode = 0;
     operand1 = operand2 = 0;
@@ -59,7 +29,7 @@ class instru{
     noOps = 0;
   }
 
-  bool getInstru(istream &file, int readPos){
+  bool instru::getInstru(istream &file, int readPos){
     //Getting instruction 2
     pos = readPos;
 
@@ -98,29 +68,7 @@ class instru{
       pos = file.tellg();
       return true;
     }
-/*
-    if (!modRegRM && !opPre1){
-      if (operand1r)
-        //Get 1 byte then increment pos by 1
-        operand1 = getByte(file,pos++);
-      else{
-        //Get 4 bytes then increment pos by 4
-        operand1 = get4Bytes(file, pos);
-        pos += 4;
-      }
 
-      if (operand2r)
-        //Get 1 byte then increment pos by 1
-        operand2 = getByte(file,pos++);
-      else{
-        //Get 4 bytes then increment pos by 4
-        operand2 = get4Bytes(file, pos);
-        pos += 4;
-      }
-
-      cout << "OPER2: " << hex << +operand2 << endl;
-    }
-*/
     if (swapOperands){
       int64_t tempOperand = operand1;
       operand1 = operand2;
@@ -156,7 +104,7 @@ class instru{
   
   }
 
-  bool parsePrefix(istream &file, int pos){
+  bool instru::parsePrefix(istream &file, int pos){
     uint8_t prefix = getByte(file, pos);
 
     //Check for REX prefix
@@ -209,7 +157,7 @@ class instru{
 
 
 
-  bool parseOpcode(uint8_t opcode, istream &file){
+  bool instru::parseOpcode(uint8_t opcode, istream &file){
     //Parse prefix byte
     if (opPre1 == 0x0F){
       switch(opcode)
@@ -278,7 +226,7 @@ class instru{
     }
   }
 
-  void parseRegModRM(uint8_t byte){
+  void instru::parseRegModRM(uint8_t byte){
     modRegRM = 1;
 
     bool d = opcode & 0x01;
@@ -294,9 +242,7 @@ class instru{
     }
   }
 
-
-
-  string getReg(uint8_t reg){
+  string instru::getReg(uint8_t reg){
     //Use 64-bit registers
     if(rexW){
       switch(reg){
@@ -333,7 +279,7 @@ class instru{
   }
 
 
-  void clearInstru(){
+  void instru::clearInstru(){
     opcode = 0;
     operand1 = operand2 = 0;
 
@@ -345,7 +291,7 @@ class instru{
 
     swapOperands = 0;
 
-    mne = reg = "";
+    mne = reg = "notLoaded";
 
     rex = rexW = rexR = rexX = rexB = 0;
 
@@ -357,6 +303,3 @@ class instru{
 
     noOps = 0;
   }
-};
-
-#endif

@@ -19,4 +19,43 @@ bool verifyHeader(istream &);
 bool verifyArch(istream &);
 
 long int entryPoint (istream &);
+
+class instru{
+
+  public:
+
+  uint8_t opcode, pos;
+  int64_t operand1, operand2;
+
+  //Stores if operand1/2 are registers
+  bool operand1r, operand2r;
+
+  //Stores operand size (used if not register)
+  int operandSize;
+
+  //True is operands are read in reverse order
+  bool swapOperands;
+
+  string mne, reg;
+  bool noOps, oneOp;
+
+  //REX prefix variables
+  bool rex, rexW, rexR, rexX, rexB;
+
+  //Variable length opcode prefixes
+  uint8_t opPre1, opPre2;
+
+  uint8_t RM_reg, RM_mod, RM_rm;
+
+  bool modRegRM;
+ 
+  instru();
+
+  bool getInstru(istream &, int);
+  bool parsePrefix(istream &, int);
+  bool parseOpcode(uint8_t, istream &);
+  void parseRegModRM(uint8_t);
+  string getReg(uint8_t);
+  void clearInstru();
+};
 #endif

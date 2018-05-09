@@ -3,7 +3,7 @@
 #include <fstream>
 
 #include "dis.h"
-#include "instr.h"
+//#include "instr.h"
 
 using namespace std;
 

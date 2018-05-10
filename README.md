@@ -1,9 +1,9 @@
 # x86_64 Disassembler
 [![Build Status](https://travis-ci.org/JonathanPugh/x86_64-Disassembler.svg?branch=master)](https://travis-ci.org/JonathanPugh/x86_64-Disassembler)
 
-This is a barebones x86_64 disassembler that supports a limited number of instructions. Output is printed to stdout and adheres to GAS syntax (a combination of AT&T and Intel syntaxes).
+This is a barebones x86_64 GNU/Linux ELF binary disassembler that supports a limited number of instructions. Output is printed to stdout and adheres to GAS syntax (a combination of AT&T and Intel syntaxes).
 
-Examples that correctly disassemble can be found in simpleTest/ and helloWorld/
+Examples to test disassembly can be found in simpleTest/ and helloWorld/
 
 ## Compiling
 Compile the disassembler with g++:
@@ -18,7 +18,7 @@ gcc -nostdlib simpleTest/test.s
 gcc -nostdlib helloWorld/helloWorld.s
 ```
 
-##Usage
+## Usage
 Pass the path of the executable to disassemble as a command line argument:
 
 ```
@@ -47,7 +47,16 @@ push       | 68      |   imm32
 syscall    | 0F 05 
 ```
 
+## Features
+The disassembler is capable of the following:
+ * Verifying the ELF header
+ * Detecting the achitecture the binary uses (32 or 64 bit)
+ * Parsing prefix byte(s) such as the REX prefix
+ * Differentiating between 32bit and 64bit registers
+ * Parsing the opcode of supported instructions
+ * Parsing the Reg-Mod-RM byte
+
 ## Limitations
  * Any instruction or format not listed above is not supported
- * .data segment declarations
- * Any labels besides _start
+ * .data segment declarations are not supported
+ * Any labels other than _start: are not supported

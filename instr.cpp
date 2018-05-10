@@ -224,10 +224,17 @@ using namespace std;
       //mul and imul
       case 0xF7: parseRegModRM(getByte(file, pos++));
                  oneOp = true;
-		 if (RM_reg == 0b101)
-                   mne = "imul";
-                 else
-                   mne = "mul";
+		 switch(RM_reg){
+                   case 0b100: mne = "mul";
+                               break;
+                   case 0b101: mne = "imul";
+			       break;
+                   case 0b110: mne = "div";
+			       break;
+                   case 0b111: mne = "idiv";
+			       break;
+		   default: cout << "Failed to parse opcode F7" << endl;
+                 }
 
                  return true;
       //Return false for unknown operation

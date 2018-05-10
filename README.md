@@ -1,7 +1,7 @@
 # x86_64 Disassembler
 [![Build Status](https://travis-ci.org/JonathanPugh/x86_64-Disassembler.svg?branch=master)](https://travis-ci.org/JonathanPugh/x86_64-Disassembler)
 
-This is a barebones x86_64 GNU/Linux ELF binary disassembler that supports a limited number of instructions. Output is printed to stdout and adheres to GAS syntax (a combination of AT&T and Intel syntaxes).
+This is a barebones x86_64 GNU/Linux ELF binary disassembler that supports a limited number of instructions. Output is printed to stdout and adheres to the GAS syntax.
 
 Examples to test disassembly can be found in simpleTest/ and helloWorld/
 

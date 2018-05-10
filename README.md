@@ -45,5 +45,5 @@ syscall : 0F 05
 
 ## Limitations
  * Any instruction or format not listed above is not supported
- * .data segment declarations
- * Any labels other than _start:
+ * .data segment declarations are not supported
+ * Any labels other than _start: are not supported
